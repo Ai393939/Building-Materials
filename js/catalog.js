@@ -77,5 +77,167 @@ function renderProducts(products) {
     });
 }
 
+function setupPriceSlider() {
+    if (!minPriceSlider || !maxPriceSlider) return;
+    
+    let maxSliderPrice = Math.ceil(maxPriceInProducts / 10) * 10;
+    
+    if (maxSliderPrice < maxPriceInProducts) {
+        maxSliderPrice = maxPriceInProducts;
+    }
+    
+    minPriceSlider.max = maxSliderPrice;
+    maxPriceSlider.max = maxSliderPrice;
+    minPriceSlider.step = 10;
+    maxPriceSlider.step = 10;
+    
+    minPriceSlider.value = 0;
+    maxPriceSlider.value = maxSliderPrice;
+    
+    if (minPriceValue) minPriceValue.textContent = '0';
+    if (maxPriceValue) maxPriceValue.textContent = maxSliderPrice;
+    
+    updateSliderTrack();
+    
+    minPriceSlider.addEventListener('input', function() {
+        let minVal = parseFloat(minPriceSlider.value);
+        let maxVal = parseFloat(maxPriceSlider.value);
+        
+        if (minVal > maxVal) {
+            minPriceSlider.value = maxVal;
+            minVal = maxVal;
+        }
+        
+        if (minPriceValue) minPriceValue.textContent = minVal;
+        updateSliderTrack();
+        applyFilters();
+    });
+    
+    maxPriceSlider.addEventListener('input', function() {
+        let minVal = parseFloat(minPriceSlider.value);
+        let maxVal = parseFloat(maxPriceSlider.value);
+        
+        if (maxVal < minVal) {
+            maxPriceSlider.value = minVal;
+            maxVal = minVal;
+        }
+        
+        if (maxPriceValue) maxPriceValue.textContent = maxVal;
+        updateSliderTrack();
+        applyFilters();
+    });
+}
+
+function updateSliderTrack() {
+    if (!sliderTrack || !minPriceSlider || !maxPriceSlider) return;
+    
+    const minVal = parseFloat(minPriceSlider.value);
+    const maxVal = parseFloat(maxPriceSlider.value);
+    const maxSliderPrice = parseFloat(minPriceSlider.max);
+    
+    const percentMin = (minVal / maxSliderPrice) * 100;
+    const percentMax = (maxVal / maxSliderPrice) * 100;
+    
+    sliderTrack.style.background = `linear-gradient(to right, #E0E0E0 0%, #E0E0E0 ${percentMin}%, #1A1A1A ${percentMin}%, #1A1A1A ${percentMax}%, #E0E0E0 ${percentMax}%, #E0E0E0 100%)`;
+}
+
+function applyFilters() {
+    let filtered = [...catalogProducts];
+    
+    const minPrice = minPriceSlider?.value !== undefined ? parseFloat(minPriceSlider.value) : 0;
+    const maxPrice = maxPriceSlider?.value !== undefined ? parseFloat(maxPriceSlider.value) : maxPriceInProducts;
+    
+    if (minPrice === 0 && maxPrice === 0) {
+        filtered = [];
+    } else if (minPrice > maxPrice) {
+        filtered = [];
+    } else {
+        filtered = filtered.filter(p => p.price >= minPrice && p.price <= maxPrice);
+    }
+    
+    let selectedRating = null;
+    if (ratingCheckboxes) {
+        for (const checkbox of ratingCheckboxes) {
+            if (checkbox.checked) {
+                selectedRating = parseInt(checkbox.value);
+                break;
+            }
+        }
+    }
+    if (selectedRating) {
+        filtered = filtered.filter(p => p.rating >= selectedRating);
+    }
+    
+    const sortValue = sortSelect?.value;
+    if (sortValue === 'name-asc') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortValue === 'price-asc') {
+        filtered.sort((a, b) => a.price - b.price);
+    } else if (sortValue === 'price-desc') {
+        filtered.sort((a, b) => b.price - a.price);
+    }
+    
+    currentProducts = filtered;
+    renderProducts(currentProducts);
+}
+
+function clearFilters() {
+    if (ratingCheckboxes) {
+        ratingCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    }
+    
+    if (minPriceSlider && maxPriceSlider) {
+        const maxSliderPrice = parseFloat(minPriceSlider.max);
+        minPriceSlider.value = 0;
+        maxPriceSlider.value = maxSliderPrice;
+        if (minPriceValue) minPriceValue.textContent = '0';
+        if (maxPriceValue) maxPriceValue.textContent = maxSliderPrice;
+        updateSliderTrack();
+    }
+    
+    applyFilters();
+}
+
+function toggleFiltersPanel() {
+    if (!filtersPanel || !filterToggleBtn) return;
+    
+    filtersPanel.classList.toggle('show');
+    const span = filterToggleBtn.querySelector('span');
+    if (filtersPanel.classList.contains('show')) {
+        if (span) span.textContent = 'Hide Filters';
+    } else {
+        if (span) span.textContent = 'Show Filters';
+    }
+}
+
+function initEventListeners() {
+    if (sortSelect) {
+        sortSelect.addEventListener('change', applyFilters);
+    }
+    
+    if (ratingCheckboxes) {
+        ratingCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    ratingCheckboxes.forEach(cb => {
+                        if (cb !== this) cb.checked = false;
+                    });
+                }
+                applyFilters();
+            });
+        });
+    }
+    
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', clearFilters);
+    }
+    
+    if (filterToggleBtn && filtersPanel) {
+        filterToggleBtn.addEventListener('click', toggleFiltersPanel);
+    }
+}
+
 loadCatalogProducts();
 initEventListeners();
