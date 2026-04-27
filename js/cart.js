@@ -231,4 +231,71 @@ function renderCartPage() {
     updateCartCount();
 }
 
+function setupPromoCode() {
+    const promoInput = document.getElementById('promoInput');
+    const applyBtn = document.getElementById('applyPromoBtn');
+    const promoMessage = document.getElementById('promoMessage');
+    const promoSuggestion = document.getElementById('promoSuggestion');
+    
+    if (!promoInput || !applyBtn) return;
+    
+    if (promoApplied) {
+        promoMessage.innerHTML = '✓ Promo code applied! You saved 10%';
+        promoMessage.className = 'promo-message success';
+        return;
+    }
+    
+    const updateSuggestion = () => {
+        const currentCode = promoInput.value.trim().toUpperCase();
+        
+        if (currentCode.length > 0) {
+            if (currentCode === 'BUILD10') {
+                if (promoSuggestion) {
+                    promoSuggestion.style.display = 'none';
+                }
+            } else {
+                if (promoSuggestion) {
+                    promoSuggestion.innerHTML = 'Try code: BUILD10 for 10% off';
+                    promoSuggestion.style.display = 'block';
+                    promoSuggestion.className = 'promo-suggestion';
+                }
+            }
+        } else {
+            if (promoSuggestion) {
+                promoSuggestion.style.display = 'none';
+            }
+        }
+    };
+    
+    promoInput.addEventListener('input', () => {
+        updateSuggestion();
+        if (promoMessage.innerHTML && promoMessage.classList.contains('error')) {
+            promoMessage.innerHTML = '';
+            promoMessage.className = 'promo-message';
+        }
+    });
+    
+    applyBtn.addEventListener('click', () => {
+        const code = promoInput.value.trim().toUpperCase();
+        
+        if (code === 'BUILD10') {
+            promoApplied = true;
+            discountPercent = 10;
+            localStorage.setItem('promoApplied', 'true');
+            promoMessage.innerHTML = '✓ Promo code applied! You saved 10%';
+            promoMessage.className = 'promo-message success';
+            if (promoSuggestion) {
+                promoSuggestion.style.display = 'none';
+            }
+            renderCartPage();
+        } else if (code === '') {
+            promoMessage.innerHTML = 'Please enter a promo code';
+            promoMessage.className = 'promo-message error';
+        } else {
+            promoMessage.innerHTML = 'Invalid promo code';
+            promoMessage.className = 'promo-message error';
+        }
+    });
+}
+
 loadCartProducts();
