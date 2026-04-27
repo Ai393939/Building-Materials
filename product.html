@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BuildMart </title>
+    <title>BuildMart</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -69,67 +69,15 @@
 
     <main>
         <div class="container">
-            <div class="catalog-header">
-                <h1>Building Materials</h1>
-                <p class="subtitle">Premium construction supplies for all your projects</p>
+            <!-- Хлебные крошки -->
+            <div class="breadcrumb">
+                <a href="index.html">Products</a>
+                <span>/</span>
+                <span id="breadcrumbProductName"></span>
             </div>
 
-            <div class="filters-bar">
-                <button class="filter-btn" id="filterToggleBtn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sliders-horizontal w-4 h-4">
-                        <line x1="21" x2="14" y1="4" y2="4"></line>
-                        <line x1="10" x2="3" y1="4" y2="4"></line>
-                        <line x1="21" x2="12" y1="12" y2="12"></line>
-                        <line x1="8" x2="3" y1="12" y2="12"></line>
-                        <line x1="21" x2="16" y1="20" y2="20"></line>
-                        <line x1="12" x2="3" y1="20" y2="20"></line>
-                        <line x1="14" x2="14" y1="2" y2="6"></line>
-                        <line x1="8" x2="8" y1="10" y2="14"></line>
-                        <line x1="16" x2="16" y1="18" y2="22"></line>
-                    </svg>
-                    <span>Show Filters</span>
-                </button>
-                <span class="product-count" id="productCount">Showing 6 products</span>
-                
-                <div class="sort-wrapper">
-                    <label>Sort by:</label>
-                    <select id="sortSelect">
-                        <option value="name-asc" selected>Name (A-Z)</option>
-                        <option value="price-asc">Price (Low to High)</option>
-                        <option value="price-desc">Price (High to Low)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="filters-panel" id="filtersPanel">
-                <div class="filter-group">
-                    <label>Minimum Rating</label>
-                    <div class="rating-checkboxes-horizontal" id="ratingCheckboxes">
-                        <label><input type="checkbox" value="5"> 5+ Stars</label>
-                        <label><input type="checkbox" value="4"> 4+ Stars</label>
-                        <label><input type="checkbox" value="3"> 3+ Stars</label>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label>Price Range</label>
-                    <div class="price-range-container">
-                        <div class="slider-container">
-                            <div class="slider-track"></div>
-                            <input type="range" id="minPriceSlider" min="0" max="400" value="0" step="1">
-                            <input type="range" id="maxPriceSlider" min="0" max="400" value="400" step="1">
-                        </div>
-                        <div class="price-values">
-                            <span>$<span id="minPriceValue">0</span></span>
-                            <span>$<span id="maxPriceValue">400</span></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="filter-group filter-actions">
-                    <button class="clear-filters-btn" id="clearFiltersBtn">Clear All Filters</button>
-                </div>
-            </div>
-
-            <div class="catalog-grid" id="catalogGrid"></div>
+            <!-- Контент товара -->
+            <div id="productContent"></div>
         </div>
     </main>
 
@@ -233,6 +181,6 @@
     </footer>
 
     <script src="js/common.js"></script>
-    <script src="js/catalog.js"></script>
+    <script src="js/product.js"></script>
 </body>
 </html>
