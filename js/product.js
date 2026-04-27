@@ -247,5 +247,73 @@ function setupQuantityControls() {
     });
 }
 
+function setupAccordionWithSvg() {
+    const header = document.getElementById('specsHeader');
+    const content = document.getElementById('specsContent');
+    const icon = header?.querySelector('.accordion-icon');
+    
+    if (header && content && icon) {
+        content.classList.add('collapsed');
+        icon.style.transform = 'rotate(0deg)';
+        icon.style.transition = 'transform 0.2s ease';
+        
+        header.addEventListener('click', () => {
+            const isCollapsed = content.classList.contains('collapsed');
+            
+            if (isCollapsed) {
+                content.classList.remove('collapsed');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('collapsed');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+}
+
+async function loadRelatedProducts() {
+    if (!currentProduct.relatedIds || currentProduct.relatedIds.length === 0) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('data/products.json');
+        const data = await response.json();
+        const relatedProducts = data.products.filter(p => currentProduct.relatedIds.includes(p.id));
+        
+        if (relatedProducts.length === 0) return;
+        
+        const section = document.getElementById('relatedProductsSection');
+        section.innerHTML = `
+            <div class="related-products">
+                <h3>Related Products</h3>
+                <div class="related-grid">
+                    ${relatedProducts.map(product => `
+                        <div class="related-card">
+                            <div class="related-card-image-wrapper">
+                                <a href="product.html?id=${product.id}">
+                                    <img src="${product.image}" alt="${product.name}" class="related-card-image" onerror="this.src='https://placehold.co/300x280?text=No+Image'">
+                                </a>
+                            </div>
+                            <div class="related-card-info">
+                                <a href="product.html?id=${product.id}" class="related-card-title-link">
+                                    <h4 class="related-title">${product.name.length > 40 ? product.name.substring(0, 37) + '...' : product.name}</h4>
+                                </a>
+                                <div class="related-rating">
+                                    <span class="stars">${renderStars(product.rating)}</span>
+                                    <span class="rating-value">(${product.rating})</span>
+                                </div>
+                                <div class="related-price">$${product.price.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Ошибка загрузки связанных товаров:', error);
+    }
+}
+
 loadProduct();
 updateCartCount();
