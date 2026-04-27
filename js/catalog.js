@@ -239,5 +239,91 @@ function initEventListeners() {
     }
 }
 
+async function initSearch() {
+    try {
+        const response = await fetch('data/products.json');
+        const data = await response.json();
+        const products = data.products;
+        
+        const searchInput = document.getElementById('searchInput');
+        const mobileSearchInput = document.getElementById('mobileSearchInput');
+        
+        if (!searchInput) return;
+        
+        const performSearch = (searchTerm) => {
+            const term = searchTerm.toLowerCase().trim();
+            
+            if (term === '') {
+                applyFilters();
+                return;
+            }
+            
+            let filtered = catalogProducts.filter(product => 
+                product.name.toLowerCase().includes(term) ||
+                product.category.toLowerCase().includes(term) ||
+                product.description.toLowerCase().includes(term)
+            );
+            
+            const minPrice = minPriceSlider?.value !== undefined ? parseFloat(minPriceSlider.value) : 0;
+            const maxPrice = maxPriceSlider?.value !== undefined ? parseFloat(maxPriceSlider.value) : maxPriceInProducts;
+            
+            filtered = filtered.filter(p => p.price >= minPrice && p.price <= maxPrice);
+            
+            let selectedRating = null;
+            if (ratingCheckboxes) {
+                for (const checkbox of ratingCheckboxes) {
+                    if (checkbox.checked) {
+                        selectedRating = parseInt(checkbox.value);
+                        break;
+                    }
+                }
+            }
+            if (selectedRating) {
+                filtered = filtered.filter(p => p.rating >= selectedRating);
+            }
+            
+            const sortValue = sortSelect?.value;
+            if (sortValue === 'name-asc') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortValue === 'price-asc') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else if (sortValue === 'price-desc') {
+                filtered.sort((a, b) => b.price - a.price);
+            }
+            
+            currentProducts = filtered;
+            renderProducts(currentProducts);
+        };
+        
+        const debouncedSearch = debounce(performSearch, 300);
+        
+        searchInput.addEventListener('input', (e) => {
+            debouncedSearch(e.target.value);
+        });
+        
+        if (mobileSearchInput) {
+            mobileSearchInput.addEventListener('input', (e) => {
+                searchInput.value = e.target.value;
+                debouncedSearch(e.target.value);
+            });
+        }
+    } catch (error) {
+        console.error('Error initializing search:', error);
+    }
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+
 loadCatalogProducts();
 initEventListeners();
