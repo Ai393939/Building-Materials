@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { RedisService } from '../redis/redis.service';
 import { CatalogQueryDto } from './dto/catalog-query.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -11,14 +12,29 @@ const SORT_COLUMNS = {
   title: 'product.title',
 } as const;
 
+const CATALOG_CACHE_TTL_SECONDS = 90;
+
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly products: Repository<Product>,
+    private readonly redis: RedisService,
   ) {}
 
   async findCatalog(query: CatalogQueryDto) {
+    const key = this.catalogCacheKey(query);
+    const cached = await this.redis.get(key);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const page = await this.queryCatalog(query);
+    await this.redis.set(key, JSON.stringify(page), CATALOG_CACHE_TTL_SECONDS);
+    return page;
+  }
+
+  private async queryCatalog(query: CatalogQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 12;
     const qb = this.products.createQueryBuilder('product');
@@ -92,5 +108,19 @@ export class ProductsService {
     if (!result.affected) {
       throw new NotFoundException('Product not found');
     }
+  }
+
+  private catalogCacheKey(query: CatalogQueryDto): string {
+    const parts = [
+      `page=${query.page ?? 1}`,
+      `limit=${query.limit ?? 12}`,
+      `search=${query.search?.trim().toLowerCase() ?? ''}`,
+      `min_price=${query.min_price ?? ''}`,
+      `max_price=${query.max_price ?? ''}`,
+      `min_rating=${query.min_rating ?? ''}`,
+      `sort_by=${query.sort_by ?? ''}`,
+      `order=${query.order ?? ''}`,
+    ];
+    return `products:${parts.join('&')}`;
   }
 }
