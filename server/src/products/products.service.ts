@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CatalogQueryDto } from './dto/catalog-query.dto';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './product.entity';
 
 const SORT_COLUMNS = {
@@ -69,5 +71,26 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
     return product;
+  }
+
+  create(dto: CreateProductDto) {
+    const product = this.products.create({
+      ...dto,
+      specifications: dto.specifications ?? null,
+    });
+    return this.products.save(product);
+  }
+
+  async update(id: number, dto: UpdateProductDto) {
+    const product = await this.findOne(id);
+    Object.assign(product, dto);
+    return this.products.save(product);
+  }
+
+  async remove(id: number): Promise<void> {
+    const result = await this.products.softDelete(id);
+    if (!result.affected) {
+      throw new NotFoundException('Product not found');
+    }
   }
 }
