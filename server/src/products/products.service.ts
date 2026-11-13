@@ -89,18 +89,23 @@ export class ProductsService {
     return product;
   }
 
-  create(dto: CreateProductDto) {
-    const product = this.products.create({
-      ...dto,
-      specifications: dto.specifications ?? null,
-    });
-    return this.products.save(product);
+  async create(dto: CreateProductDto) {
+    const product = await this.products.save(
+      this.products.create({
+        ...dto,
+        specifications: dto.specifications ?? null,
+      }),
+    );
+    await this.dropCatalogCache();
+    return product;
   }
 
   async update(id: number, dto: UpdateProductDto) {
     const product = await this.findOne(id);
     Object.assign(product, dto);
-    return this.products.save(product);
+    const saved = await this.products.save(product);
+    await this.dropCatalogCache();
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
@@ -108,6 +113,11 @@ export class ProductsService {
     if (!result.affected) {
       throw new NotFoundException('Product not found');
     }
+    await this.dropCatalogCache();
+  }
+
+  private dropCatalogCache(): Promise<void> {
+    return this.redis.deleteByPrefix('products:');
   }
 
   private catalogCacheKey(query: CatalogQueryDto): string {
