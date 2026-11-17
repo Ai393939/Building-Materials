@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RedisService } from '../redis/redis.service';
@@ -16,6 +16,8 @@ const CATALOG_CACHE_TTL_SECONDS = 90;
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(
     @InjectRepository(Product)
     private readonly products: Repository<Product>,
@@ -24,13 +26,21 @@ export class ProductsService {
 
   async findCatalog(query: CatalogQueryDto) {
     const key = this.catalogCacheKey(query);
-    const cached = await this.redis.get(key);
-    if (cached) {
-      return JSON.parse(cached);
+    try {
+      const cached = await this.redis.get(key);
+      if (cached) {
+        return JSON.parse(cached) as Awaited<ReturnType<ProductsService['queryCatalog']>>;
+      }
+    } catch {
+      this.logger.warn('Catalog cache read failed');
     }
 
     const page = await this.queryCatalog(query);
-    await this.redis.set(key, JSON.stringify(page), CATALOG_CACHE_TTL_SECONDS);
+    try {
+      await this.redis.set(key, JSON.stringify(page), CATALOG_CACHE_TTL_SECONDS);
+    } catch {
+      this.logger.warn('Catalog cache write failed');
+    }
     return page;
   }
 
@@ -116,8 +126,12 @@ export class ProductsService {
     await this.dropCatalogCache();
   }
 
-  private dropCatalogCache(): Promise<void> {
-    return this.redis.deleteByPrefix('products:');
+  private async dropCatalogCache(): Promise<void> {
+    try {
+      await this.redis.deleteByPrefix('products:');
+    } catch {
+      this.logger.warn('Catalog cache invalidation failed');
+    }
   }
 
   private catalogCacheKey(query: CatalogQueryDto): string {

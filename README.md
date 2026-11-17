@@ -59,7 +59,8 @@ Swagger: http://localhost:3000/api/docs
 | `NODE_ENV` | `development` включает synchronize у TypeORM, `production` выключает |
 | `DATABASE_URL` | PostgreSQL. Локально это сервис из compose, на Render — строка Neon |
 | `DATABASE_SSL` | `true` для Neon, `false` для локального Postgres |
-| `REDIS_URL` | Redis |
+| `DATABASE_SYNC` | `true` на Render, чтобы TypeORM создал таблицы в Neon. Локально можно не задавать |
+| `REDIS_URL` | Redis. На Render это отдельный Redis (Render Key Value или Upstash), не сервис из compose |
 | `JWT_SECRET` | Секрет подписи токена |
 | `JWT_EXPIRES_IN` | Срок жизни токена, например `7d` |
 | `CORS_ORIGIN` | Адрес фронтенда. Несколько адресов можно перечислить через запятую |
@@ -71,7 +72,8 @@ Swagger: http://localhost:3000/api/docs
 
 ### Деплой
 
-- Облачная база: Neon
+- Облачная база: Neon. В панели Render задай `DATABASE_SSL=true` и `DATABASE_SYNC=true`, иначе таблицы не создадутся.
+- Redis: отдельный хост, строка `REDIS_URL`. Контейнер redis из compose на Render не запускается.
 - Картинки: Cloudinary
 - API: Render, сборка из `server/Dockerfile`
 - Публичный API: заполнится после деплоя

@@ -125,17 +125,21 @@ export class CartService {
   }
 
   private toResponse(cart: Cart) {
-    const items = cart.items.map((item) => {
-      const lineTotal = this.money(item.product.price * item.quantity);
-      return {
-        id: item.id,
-        productId: item.product.id,
-        title: item.product.title,
-        price: item.product.price,
-        quantity: item.quantity,
-        lineTotal,
-      };
-    });
+    const items = cart.items
+      .filter((item) => item.product)
+      .map((item) => {
+        const lineTotal = this.money(item.product.price * item.quantity);
+        return {
+          id: item.id,
+          productId: item.product.id,
+          title: item.product.title,
+          price: item.product.price,
+          image: item.product.images?.[0] ?? null,
+          category: item.product.category,
+          quantity: item.quantity,
+          lineTotal,
+        };
+      });
     const subtotal = this.money(items.reduce((sum, item) => sum + item.lineTotal, 0));
     const percent =
       cart.promoCode && cart.promoCode.isActive
