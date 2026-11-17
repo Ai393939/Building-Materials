@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in — BuildMart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container header__inner">
+            <a href="index.html" class="logo-wrapper">
+                <div class="logo-box">BM</div>
+                <span class="logo-text">BuildMart</span>
+            </a>
+            <nav class="nav" id="mainNav">
+                <a href="index.html" class="nav__link">Products</a>
+                <a href="#" class="nav__link">Categories</a>
+                <a href="#" class="nav__link">Deals</a>
+                <a href="#" class="nav__link">About</a>
+            </nav>
+            <div class="header-right">
+                <a href="login.html" class="account-link" id="accountLink">Sign in</a>
+                <a href="cart.html" class="cart-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <form class="auth-card" id="authForm">
+                <h1>Sign in</h1>
+                <p>Корзина открывается после входа. Промокод в корзине: SAVE10</p>
+                <label>Email
+                    <input type="email" id="email" autocomplete="username" required>
+                </label>
+                <label>Password
+                    <input type="password" id="password" minlength="6" autocomplete="current-password" required>
+                </label>
+                <p class="auth-error" id="authError"></p>
+                <button type="submit" class="add-to-cart-btn">Sign in</button>
+                <button type="button" class="buy-now-btn" id="registerBtn">Create account</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

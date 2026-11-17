@@ -12,19 +12,11 @@ async function loadProduct() {
     }
     
     try {
-        const response = await fetch('data/products.json');
-        const data = await response.json();
-        currentProduct = data.products.find(p => p.id === productId);
-        
-        if (!currentProduct) {
-            document.getElementById('productContent').innerHTML = '<p style="text-align:center;padding:40px;">Товар не найден</p>';
-            return;
-        }
-        
+        currentProduct = toStoreProduct(await apiGet(`/api/products/${productId}`));
         renderProduct();
     } catch (error) {
-        console.error('Ошибка загрузки товара:', error);
-        document.getElementById('productContent').innerHTML = '<p style="text-align:center;padding:40px;">Ошибка загрузки товара</p>';
+        const message = error.status === 404 ? 'Товар не найден' : 'Ошибка загрузки товара';
+        document.getElementById('productContent').innerHTML = `<p style="text-align:center;padding:40px;">${message}</p>`;
     }
 }
 
@@ -148,7 +140,7 @@ function renderProduct() {
                         </div>
                         <div class="accordion-content" id="specsContent">
                             <div class="specs-grid">
-                                ${Object.entries(currentProduct.specifications).map(([key, value]) => `
+                                ${Object.entries(currentProduct.specifications || {}).map(([key, value]) => `
                                     <div class="spec-item">
                                         <span class="spec-key">${key}</span>
                                         <span class="spec-value">${value}</span>
@@ -174,9 +166,9 @@ function renderProduct() {
         addToCart(currentProduct.id, currentQuantity);
     });
     
-    document.getElementById('buyNowBtn').addEventListener('click', () => {
-        addToCart(currentProduct.id, currentQuantity);
-        window.location.href = 'cart.html';
+    document.getElementById('buyNowBtn').addEventListener('click', async () => {
+        await addToCart(currentProduct.id, currentQuantity);
+        if (getToken()) window.location.href = 'cart.html';
     });
     
     loadRelatedProducts();
