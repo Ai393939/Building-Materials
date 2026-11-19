@@ -1,42 +1,62 @@
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let cart = [];
 let cartProducts = [];
-let promoApplied = localStorage.getItem('promoApplied') === 'true';
-let discountPercent = promoApplied ? 10 : 0;
+let promoApplied = false;
+let discountPercent = 0;
+let serverDiscount = 0;
 
-function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
-    renderCartPage();
-}
-
-window.updateQuantity = function(productId, change) {
+window.updateQuantity = async function(productId, change) {
     const cartItem = cart.find(item => item.id === productId);
-    if (cartItem) {
-        const newQuantity = cartItem.quantity + change;
-        if (newQuantity <= 0) {
-            removeFromCart(productId);
+    if (!cartItem) return;
+    const nextQuantity = cartItem.quantity + change;
+    try {
+        if (nextQuantity <= 0) {
+            await apiSend(`/api/cart/items/${cartItem.cartItemId}`, 'DELETE');
         } else {
-            cartItem.quantity = newQuantity;
-            saveCart();
+            await apiSend(`/api/cart/items/${cartItem.cartItemId}`, 'PATCH', { quantity: nextQuantity });
         }
+        await loadCartProducts();
+    } catch (error) {
+        showToast(messageFromError(error));
     }
 };
 
-window.removeFromCart = function(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    saveCart();
+window.removeFromCart = async function(productId) {
+    const cartItem = cart.find(item => item.id === productId);
+    if (!cartItem) return;
+    try {
+        await apiSend(`/api/cart/items/${cartItem.cartItemId}`, 'DELETE');
+        await loadCartProducts();
+    } catch (error) {
+        showToast(messageFromError(error));
+    }
 };
 
 async function loadCartProducts() {
+    if (!getToken()) {
+        window.location.href = 'login.html?next=' + encodeURIComponent('cart.html');
+        return;
+    }
     try {
-        const response = await fetch('data/products.json');
-        const data = await response.json();
-        cartProducts = data.products;
+        const data = await apiGet('/api/cart');
+        cart = data.items.map(item => ({
+            id: item.productId,
+            cartItemId: item.id,
+            quantity: item.quantity,
+        }));
+        cartProducts = data.items.map(item => ({
+            id: item.productId,
+            name: item.title,
+            image: item.image || '',
+            category: item.category || '',
+            price: item.price,
+        }));
+        promoApplied = Boolean(data.promoCode);
+        serverDiscount = data.discount;
+        discountPercent = data.subtotal ? Math.round((data.discount / data.subtotal) * 100) : 0;
         renderCartPage();
     } catch (error) {
-        console.error('Ошибка загрузки товаров:', error);
         const container = document.getElementById('cartContent');
-        if (container) {
+        if (container && error.status !== 401) {
             container.innerHTML = '<p style="text-align:center;padding:40px;">Ошибка загрузки</p>';
         }
     }
@@ -128,10 +148,7 @@ function renderCartPage() {
     }
     
     const tax = subtotal * 0.08;
-    let discount = 0;
-    if (promoApplied) {
-        discount = subtotal * (discountPercent / 100);
-    }
+    const discount = promoApplied ? serverDiscount : 0;
     const total = subtotal + tax - discount;
     
     container.innerHTML = `
@@ -249,13 +266,13 @@ function setupPromoCode() {
         const currentCode = promoInput.value.trim().toUpperCase();
         
         if (currentCode.length > 0) {
-            if (currentCode === 'BUILD10') {
+            if (currentCode === 'SAVE10') {
                 if (promoSuggestion) {
                     promoSuggestion.style.display = 'none';
                 }
             } else {
                 if (promoSuggestion) {
-                    promoSuggestion.innerHTML = 'Try code: BUILD10 for 10% off';
+                    promoSuggestion.innerHTML = 'Try code: SAVE10 for 10% off';
                     promoSuggestion.style.display = 'block';
                     promoSuggestion.className = 'promo-suggestion';
                 }
@@ -275,24 +292,19 @@ function setupPromoCode() {
         }
     });
     
-    applyBtn.addEventListener('click', () => {
-        const code = promoInput.value.trim().toUpperCase();
-        
-        if (code === 'BUILD10') {
-            promoApplied = true;
-            discountPercent = 10;
-            localStorage.setItem('promoApplied', 'true');
-            promoMessage.innerHTML = '✓ Promo code applied! You saved 10%';
-            promoMessage.className = 'promo-message success';
-            if (promoSuggestion) {
-                promoSuggestion.style.display = 'none';
-            }
-            renderCartPage();
-        } else if (code === '') {
-            promoMessage.innerHTML = 'Please enter a promo code';
+    applyBtn.addEventListener('click', async () => {
+        const code = promoInput.value.trim();
+        if (!code) {
+            promoMessage.innerHTML = 'Введите промокод';
             promoMessage.className = 'promo-message error';
-        } else {
-            promoMessage.innerHTML = 'Invalid promo code';
+            return;
+        }
+
+        try {
+            await apiSend('/api/cart/apply-promo', 'POST', { code });
+            await loadCartProducts();
+        } catch (error) {
+            promoMessage.innerHTML = messageFromError(error);
             promoMessage.className = 'promo-message error';
         }
     });

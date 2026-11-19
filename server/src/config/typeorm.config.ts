@@ -6,11 +6,16 @@ export function typeOrmConfig(config: ConfigService): TypeOrmModuleOptions {
   const sslFlag = config.get<string>('DATABASE_SSL');
   const useSsl = sslFlag === 'true' || url.includes('sslmode=require');
 
+  const syncFlag = config.get<string>('DATABASE_SYNC');
+  const synchronize =
+    syncFlag === 'true' ||
+    (syncFlag !== 'false' && config.get<string>('NODE_ENV') !== 'production');
+
   const options = {
     type: 'postgres' as const,
     url,
     autoLoadEntities: true,
-    synchronize: config.get<string>('NODE_ENV') !== 'production',
+    synchronize,
     retryAttempts: 10,
     retryDelay: 3000,
   };
