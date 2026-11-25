@@ -1,6 +1,6 @@
-let catalogProducts = [];
 let currentProducts = [];
 let maxPriceInProducts = 0;
+let catalogRequest = 0;
 
 const catalogGrid = document.getElementById('catalogGrid');
 const sortSelect = document.getElementById('sortSelect');
@@ -16,15 +16,17 @@ const maxPriceValue = document.getElementById('maxPriceValue');
 const sliderTrack = document.querySelector('.slider-track');
 
 async function loadCatalogProducts() {
-    const data = await loadJSON('data/products.json');
-    if (!data) return;
-    
-    catalogProducts = data.products;
-    maxPriceInProducts = Math.max(...catalogProducts.map(p => p.price));
-    
-    setupPriceSlider();
-    applyFilters();
-    initSearch();
+    try {
+        const data = await apiGet('/api/products?limit=1&sort_by=price&order=desc');
+        maxPriceInProducts = data.items[0] ? data.items[0].price : 100;
+        setupPriceSlider();
+        applyFilters();
+        initSearch();
+    } catch {
+        if (catalogGrid) {
+            catalogGrid.innerHTML = '<p style="text-align:center;padding:40px;">Не удалось загрузить каталог</p>';
+        }
+    }
 }
 
 function renderProducts(products) {
@@ -141,45 +143,61 @@ function updateSliderTrack() {
     sliderTrack.style.background = `linear-gradient(to right, #E0E0E0 0%, #E0E0E0 ${percentMin}%, #1A1A1A ${percentMin}%, #1A1A1A ${percentMax}%, #E0E0E0 ${percentMax}%, #E0E0E0 100%)`;
 }
 
-function applyFilters() {
-    let filtered = [...catalogProducts];
-    
-    const minPrice = minPriceSlider?.value !== undefined ? parseFloat(minPriceSlider.value) : 0;
-    const maxPrice = maxPriceSlider?.value !== undefined ? parseFloat(maxPriceSlider.value) : maxPriceInProducts;
-    
-    if (minPrice === 0 && maxPrice === 0) {
-        filtered = [];
-    } else if (minPrice > maxPrice) {
-        filtered = [];
-    } else {
-        filtered = filtered.filter(p => p.price >= minPrice && p.price <= maxPrice);
+async function applyFiltersNow() {
+    const params = { limit: 100 };
+    const minPrice = minPriceSlider ? parseFloat(minPriceSlider.value) : 0;
+    const maxPrice = maxPriceSlider ? parseFloat(maxPriceSlider.value) : maxPriceInProducts;
+
+    if ((minPrice === 0 && maxPrice === 0) || minPrice > maxPrice) {
+        currentProducts = [];
+        renderProducts(currentProducts);
+        return;
     }
-    
+
+    if (minPrice > 0) params.min_price = minPrice;
+    if (maxPriceInProducts && maxPrice < maxPriceInProducts) params.max_price = maxPrice;
+
     let selectedRating = null;
     if (ratingCheckboxes) {
         for (const checkbox of ratingCheckboxes) {
             if (checkbox.checked) {
-                selectedRating = parseInt(checkbox.value);
+                selectedRating = parseInt(checkbox.value, 10);
                 break;
             }
         }
     }
-    if (selectedRating) {
-        filtered = filtered.filter(p => p.rating >= selectedRating);
-    }
-    
+    if (selectedRating) params.min_rating = selectedRating;
+
     const sortValue = sortSelect?.value;
     if (sortValue === 'name-asc') {
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        params.sort_by = 'title';
+        params.order = 'asc';
     } else if (sortValue === 'price-asc') {
-        filtered.sort((a, b) => a.price - b.price);
+        params.sort_by = 'price';
+        params.order = 'asc';
     } else if (sortValue === 'price-desc') {
-        filtered.sort((a, b) => b.price - a.price);
+        params.sort_by = 'price';
+        params.order = 'desc';
     }
-    
-    currentProducts = filtered;
-    renderProducts(currentProducts);
+
+    const search = document.getElementById('searchInput')?.value.trim();
+    if (search) params.search = search;
+
+    const requestId = ++catalogRequest;
+    try {
+        const data = await apiGet(`/api/products${toQuery(params)}`);
+        if (requestId !== catalogRequest) return;
+        currentProducts = data.items.map(toStoreProduct);
+        renderProducts(currentProducts);
+    } catch {
+        if (requestId !== catalogRequest) return;
+        if (catalogGrid) {
+            catalogGrid.innerHTML = '<p style="text-align:center;padding:40px;">Не удалось загрузить каталог</p>';
+        }
+    }
 }
+
+const applyFilters = debounce(applyFiltersNow, 200);
 
 function clearFilters() {
     if (ratingCheckboxes) {
@@ -239,76 +257,20 @@ function initEventListeners() {
     }
 }
 
-async function initSearch() {
-    try {
-        const response = await fetch('data/products.json');
-        const data = await response.json();
-        const products = data.products;
-        
-        const searchInput = document.getElementById('searchInput');
-        const mobileSearchInput = document.getElementById('mobileSearchInput');
-        
-        if (!searchInput) return;
-        
-        const performSearch = (searchTerm) => {
-            const term = searchTerm.toLowerCase().trim();
-            
-            if (term === '') {
-                applyFilters();
-                return;
-            }
-            
-            let filtered = catalogProducts.filter(product => 
-                product.name.toLowerCase().includes(term) ||
-                product.category.toLowerCase().includes(term) ||
-                product.description.toLowerCase().includes(term)
-            );
-            
-            const minPrice = minPriceSlider?.value !== undefined ? parseFloat(minPriceSlider.value) : 0;
-            const maxPrice = maxPriceSlider?.value !== undefined ? parseFloat(maxPriceSlider.value) : maxPriceInProducts;
-            
-            filtered = filtered.filter(p => p.price >= minPrice && p.price <= maxPrice);
-            
-            let selectedRating = null;
-            if (ratingCheckboxes) {
-                for (const checkbox of ratingCheckboxes) {
-                    if (checkbox.checked) {
-                        selectedRating = parseInt(checkbox.value);
-                        break;
-                    }
-                }
-            }
-            if (selectedRating) {
-                filtered = filtered.filter(p => p.rating >= selectedRating);
-            }
-            
-            const sortValue = sortSelect?.value;
-            if (sortValue === 'name-asc') {
-                filtered.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (sortValue === 'price-asc') {
-                filtered.sort((a, b) => a.price - b.price);
-            } else if (sortValue === 'price-desc') {
-                filtered.sort((a, b) => b.price - a.price);
-            }
-            
-            currentProducts = filtered;
-            renderProducts(currentProducts);
-        };
-        
-        const debouncedSearch = debounce(performSearch, 300);
-        
-        searchInput.addEventListener('input', (e) => {
-            debouncedSearch(e.target.value);
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', () => {
+        applyFilters();
+    });
+
+    if (mobileSearchInput) {
+        mobileSearchInput.addEventListener('input', (e) => {
+            searchInput.value = e.target.value;
+            applyFilters();
         });
-        
-        if (mobileSearchInput) {
-            mobileSearchInput.addEventListener('input', (e) => {
-                searchInput.value = e.target.value;
-                debouncedSearch(e.target.value);
-            });
-        }
-    } catch (error) {
-        console.error('Error initializing search:', error);
     }
 }
 

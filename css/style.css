@@ -2092,3 +2092,64 @@ footer {
         transform: translateY(calc(100% - 30px));
     }
 }
+
+.account-link {
+    color: #1A1A1A;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.account-link:hover {
+    color: #F54900;
+}
+
+.auth-card {
+    max-width: 420px;
+    margin: 48px auto 80px;
+    padding: 32px;
+    border: 1px solid #E0E0E0;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-card h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.auth-card p {
+    margin: 0;
+    color: #666;
+}
+
+.auth-card label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.auth-card input {
+    height: 42px;
+    border: 1px solid #E0E0E0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font: inherit;
+}
+
+.auth-error {
+    min-height: 20px;
+    color: #F54900;
+    font-size: 14px;
+}
+
+.auth-card .add-to-cart-btn,
+.auth-card .buy-now-btn {
+    width: 100%;
+    justify-content: center;
+}
