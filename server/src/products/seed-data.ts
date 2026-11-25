@@ -8,11 +8,30 @@ export type ProductSeed = {
   specifications: Record<string, string>;
 };
 
+const localImagesMap: Record<string, string> = {
+  'Exterior Paint Set': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592464/shop_caparol_capawood_wetterschutzfarbe_farbton.png',
+  'Plywood Sheets': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592547/images.jpg',
+  'Premium Cement Bags': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592586/images_1.jpg',
+  'Premium Lumber Planks': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592586/images_2.jpg',
+  'Red Clay Bricks': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592586/images_3.jpg',
+  'Steel I-Beams': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592585/images_4.jpg',
+  'Ceramic Floor Tiles': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592762/01-carrara-white.webp',
+  'Copper Pipe Coil': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592779/images_5.jpg',
+  'Fiberglass Insulation Rolls': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592832/images_6.jpg',
+  'Safety Work Gloves': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592849/images_7.jpg',
+  'Concrete Mixer': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592869/images_8.jpg',
+  'Roofing Shingles Bundle': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592890/images_9.jpg',
+  'Drywall Sheets': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592907/images_10.jpg',
+  'LED Shop Light': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592923/images_11.jpg',
+  'Galvanized Nails Box': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592941/images_12.jpg',
+  'Oak Hardwood Flooring': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592955/images_13.jpg',
+  'Exterior Caulk Tubes': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592974/images_14.jpg',
+  'Rebar Stakes': 'https://res.cloudinary.com/jkvyublk/image/upload/v1795592974/images_16.jpg',
+};
+
 function imagesFor(title: string): string[] {
-  return [1, 2, 3].map(
-    (index) =>
-      `https://placehold.co/800x600?text=${encodeURIComponent(`${title} ${index}`)}`,
-  );
+  const img = localImagesMap[title] || 'images/Premium_Cement_Bags.jfif';
+  return [img, img, img];
 }
 
 const catalog: ProductSeed[] = [
