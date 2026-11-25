@@ -19,7 +19,7 @@ BuildMart — интернет-магазин строительных мате�
 
 ## Сервер
 
-API на NestJS, TypeORM и PostgreSQL. Каталог кэшируется в Redis. Картинки товаров в сиде пока стоят на placehold.co: после загрузки в Cloudinary их нужно заменить в `server/src/products/seed-data.ts`, функция `imagesFor`.
+API на NestJS, TypeORM и PostgreSQL. Каталог кэшируется в Redis. Ссылки на изображения товаров настраиваются в `server/src/products/seed-data.ts` (функция `imagesFor`).
 
 ### Локальный запуск
 
@@ -47,7 +47,7 @@ npm run seed
 curl http://localhost:3000/health
 ```
 
-Swagger: http://localhost:3000/api/docs
+Swagger: https://building-materials-98ep.onrender.com/api/docs
 
 Контейнер приложения собирается в три стадии и запускается от пользователя `node`.
 
@@ -76,5 +76,5 @@ Swagger: http://localhost:3000/api/docs
 - Redis: отдельный хост, строка `REDIS_URL`. Контейнер redis из compose на Render не запускается.
 - Картинки: Cloudinary
 - API: Render, сборка из `server/Dockerfile`
-- Публичный API: заполнится после деплоя
-- Swagger: заполнится после деплоя, путь `/api/docs`
+- Публичный API: `https://building-materials-98ep.onrender.com/api/products`
+- Swagger: `https://building-materials-98ep.onrender.com/api/docs`

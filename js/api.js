@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'https://building-materials-98ep.onrender.com';
 
 function getToken() {
     return localStorage.getItem('accessToken');
