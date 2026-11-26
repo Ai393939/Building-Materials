@@ -30,7 +30,15 @@ async function bootstrap() {
     .setTitle('BuildMart API')
     .setDescription('Интернет-магазин строительных материалов')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Вставь accessToken из логина, без слова Bearer',
+      },
+      'bearer',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);

@@ -11,6 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -35,6 +36,7 @@ export class ProductsController {
   }
 
   @Post()
+  @ApiBearerAuth('bearer')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin)
   create(@Body() dto: CreateProductDto) {
@@ -42,6 +44,7 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth('bearer')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
@@ -50,6 +53,7 @@ export class ProductsController {
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiBearerAuth('bearer')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Admin)
   remove(@Param('id', ParseIntPipe) id: number) {
